@@ -1,11 +1,13 @@
 """
-Time resolved Kelvin Probe Force Microsocpy
+Translator used to go from .ibw igor files to USID HDF5 files.
 
-Submodules
-------------
- translators
+Created on Fri Sept 18 2020
+
+@author: Nicole Creange
 """
 
-from . import translators
 
-__all__  = ['translators']
+from .igor_ibw import IgorIBWTranslator
+
+
+__all__ = ['IgorIBWTranslator']
