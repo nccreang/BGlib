@@ -2,4 +2,6 @@
 test file
 """
 
-print('This file is created for developement, will be replaced')
+
+class empty():
+    print('This file is created for developement, will be replaced')
