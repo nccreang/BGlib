@@ -14,7 +14,7 @@ class LinearKPFM():
         self.h5_main = h5_main
         self.scan_rate = scan_rate
         self.scan_size = scan_size
-        self.im = dim
+        self.dim = dim
 
 
     def split_voltages(self):
