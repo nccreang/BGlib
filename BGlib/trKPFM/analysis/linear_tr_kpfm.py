@@ -93,6 +93,7 @@ class LinearKPFM():
     def plot_CPD_voltages(self,method='Raw',window=13,poly=3):
         import matplotlib.pyplot as plt
         import numpy as np
+        from scipy.optimize import signal as si
 
         if method not in ['Raw','Static_rm','Efield']:
             print(method+" is not an option. Please choose from either: 'Raw', 'Static_rm', or 'Efield'.")
