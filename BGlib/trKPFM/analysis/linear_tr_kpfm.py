@@ -48,7 +48,6 @@ class LinearKPFM():
         """
         import numpy as np
 
-        scan_rate = scan_rate
         desr = [ii.data_descriptor for ii in self.h5_main]
         subs = ['Amplitude', 'Potential', 'UserIn', 'HeightRetrace', 'Phase']
         indx0 = [desr.index(list(filter(lambda x: ii in x, desr))[0]) for ii in subs]
@@ -64,7 +63,7 @@ class LinearKPFM():
         phase = (np.flipud(np.reshape(phase_data, ndim_form[:2])))
 
         data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
-                     'scan_rate': seflf.scan_rate, 'scan_size': self.scan_size}
+                     'scan_rate': self.scan_rate, 'scan_size': self.scan_size}
 
         vs, cntmax, cnttot, indx, t, y = self.split_voltages(data_dict)
 
