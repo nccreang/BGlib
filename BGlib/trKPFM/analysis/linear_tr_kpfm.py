@@ -12,8 +12,8 @@ class LinearKPFM():
 
     def split_voltages(self):
         import numpy as np
-        t = np.array([ii for ii in range(data_dict['ndim_form'][0])]) * (1 / data_dict['scan_rate']) * 2
-        y = np.linspace(0, data_dict['scan_size'], data_dict['ndim_form'][0])
+        t = np.array([ii for ii in range(self.ndim_form[0])]) * (1 / self.scan_rate) * 2
+        y = np.linspace(0, self.scan_size, self.ndim_form[0])
 
         cnttot = 0
         count = 1
