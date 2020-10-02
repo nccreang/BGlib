@@ -10,7 +10,7 @@ class LinearKPFM():
         self.scan_size = scan_size
 
 
-    def split_voltages(self,data_dict):
+    def split_voltages(self):
         import numpy as np
         t = np.array([ii for ii in range(data_dict['ndim_form'][0])]) * (1 / data_dict['scan_rate']) * 2
         y = np.linspace(0, data_dict['scan_size'], data_dict['ndim_form'][0])
@@ -67,7 +67,7 @@ class LinearKPFM():
         self.pot = (np.flipud(np.reshape(pot_data, self.ndim_form[:2])))
         self.height = (np.flipud(np.reshape(height_data, self.ndim_form[:2])))
         self.phase = (np.flipud(np.reshape(phase_data, self.ndim_form[:2])))
-        self.amp = (np.flipud(np.reshape(amp_data,self.ndim_form[:,2])))
+        self.amp = (np.flipud(np.reshape(amp_data,self.ndim_form[:2])))
 
 
         # data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
