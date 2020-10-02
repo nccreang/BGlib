@@ -63,7 +63,7 @@ class LinearKPFM():
         data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
                      'scan_rate': scan_rate, 'scan_size': scan_size}
 
-        vs, cntmax, cnttot, indx, t, y = split_voltages(data_dict)
+        vs, cntmax, cnttot, indx, t, y = self.split_voltages(data_dict)
 
         data_dict.update({'indx': indx, 'vs': vs, 'count max': cntmax,'count total':cnttot,'t':t,'y':y})
         return data_dict
