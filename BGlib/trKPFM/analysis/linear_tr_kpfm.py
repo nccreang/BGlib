@@ -93,7 +93,7 @@ class LinearKPFM():
     def plot_CPD_voltages(self,method='Raw',window=13,poly=3):
         import matplotlib.pyplot as plt
         import numpy as np
-        from scipy.optimize import signal as si
+        from scipy import signal as si
 
         if method not in ['Raw','Static_rm','Efield']:
             print(method+" is not an option. Please choose from either: 'Raw', 'Static_rm', or 'Efield'.")
@@ -146,7 +146,7 @@ class LinearKPFM():
                 axs[row, col].plot(self.y, yy, c=cmap(jj))
             elif method == 'Efield':
                 smooth = si.savgol_filter(self.pot[ii,:]-zero_pot,window,poly)
-                yy = np.diff(smooth)/np.diff(data_dict['y'])*1e4
+                yy = np.diff(smooth)/np.diff(self.y)*1e4
                 axs[row, col].plot(self.y[:,-1],yy,c=cmap(jj))
 
             lab = 0
