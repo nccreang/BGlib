@@ -130,6 +130,10 @@ class LinearKPFM():
                     if np.rint(self.volt[ii, 0]) != 0:
                         col = 0
                         row = row + 1
+                        if lab==1:
+                            zero_pot = self.pot[ii-2,:]
+                        else:
+                            zero_pot = self.pot[ii-1,:]
                     else:
                         col = 1
                         zero_pot = self.zeroavg
