@@ -94,6 +94,9 @@ class LinearKPFM():
         import matplotlib.pyplot as plt
         import numpy as np
 
+        if method not in ['Raw','Static_rm','Efield']:
+            print(method+" is not an option. Please choose from either: 'Raw', 'Static_rm', or 'Efield'.")
+            return
         cmap = plt.cm.get_cmap('plasma', self.cntmax)
         jj = 0
         fig, axs = plt.subplots(nrows=int(self.cnttot / 2 + 1), ncols=2, sharex='col', figsize=(15, 10))
