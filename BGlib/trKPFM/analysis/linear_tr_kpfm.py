@@ -77,7 +77,7 @@ class LinearKPFM():
         # data_dict.update({'indx': indx, 'vs': vs, 'count max': cntmax,'count total':cnttot,'t':t,'y':y})
         # return data_dict
 
-    def compute_voltage_averages(self,data_dict):
+    def compute_voltage_averages(self):
         import numpy as np
 
         avgs = []
@@ -90,7 +90,7 @@ class LinearKPFM():
         self.avgs = self.avgs
 
 
-    def plot_CPD_voltages(method='Raw',window=13,poly=3):
+    def plot_CPD_voltages(self,method='Raw',window=13,poly=3):
         import matplotlib.pyplot as plt
         import numpy as np
 
