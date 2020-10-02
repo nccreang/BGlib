@@ -115,7 +115,7 @@ class LinearKPFM():
         col = 1
         row = 0
         lab = 0
-        if method = 'Efield':
+        if method == 'Efield':
             if np.rint(self.volt[self.indx[0]-1,-1])!=np.rint(self.volt[self.indx[0]-1,0]):
                 lab = 1
             else:
