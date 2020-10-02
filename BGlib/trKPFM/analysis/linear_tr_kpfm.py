@@ -186,10 +186,11 @@ class LinearKPFM():
         fig.subplots_adjust(wspace=.3)
         return fig, axs
 
-    def calc_relaxtion(self,dist):
+    def calc_relaxation(self,dist):
         """
         dist: list of distances (real space) of wanted relaxtion calculation
         """
+        return 'Function under construction'
         import matplotlib.pyplot as plt
         import numpy as np
         from scipy.optimize import curve_fit
@@ -254,6 +255,7 @@ class LinearKPFM():
                     b_z.append(popt[1])
                     a_z.append(popt[0])
                 else:
+                    y_array = self.pot[self.indx[ii]:self.indx[ii + 1] - 1, jj] - self.zeroavg[jj]
                     x_array = self.t[:len(y_array)]
                     lin0 += ax[0, p].plot(x_array, y_array, c=cmap(ii),
                                           label=str(int(np.rint(self.volt[self.indx[ii], 0]))) + ' V')
@@ -295,12 +297,13 @@ class LinearKPFM():
 
     def view_line_scans(self,dist):
         """
+        CURRENTLY BROKEN
         dist: distances in real space to plot
         """
+        return 'Function under construction'
         import numpy as np
         import matplotlib.pyplot as plt
         avgs = []
-        zeroavg = np.mean(self.pot[:self.indx[0] - 1, :], axis=0)
         for ii in range(len(self.indx) - 1):
             avgs.append(np.mean(self.pot[self.indx[ii]:self.indx[ii + 1] + 1, :], axis=0) - self.zeroavg)
 
