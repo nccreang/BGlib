@@ -148,8 +148,8 @@ class LinearKPFM():
                     S = np.array2string(np.rint(self.volt[ii, 0])) + ' V'
                     axs[row, col].text(0.3, 0.8, S, transform=axs[row, col].transAxes)
                     axs[row, col].set_ylabel('CPD (V)', rotation=90, labelpad=2)
-            if ii == self.indx[0] or ii == 0:
-                zero_pot = self.zeroavg
+                if ii == self.indx[0]:
+                    zero_pot = self.zeroavg
             if method == 'Raw':
                 yy = self.pot[ii, :]
                 axs[row, col].plot(self.y, yy, c=cmap(jj))
