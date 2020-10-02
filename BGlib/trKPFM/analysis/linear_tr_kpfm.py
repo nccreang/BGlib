@@ -36,7 +36,13 @@ class LinearKPFM():
                     count = 1
             else:
                 count = count + 1
-        return vs, cntmax, cnttot, indx, t, y
+        self.vs = vs
+        self.cntmax = cntmax
+        self.cnttot = cnttot
+        self.indx = indx
+        self.y = y
+        self.t = t
+        # return vs, cntmax, cnttot, indx, t, y
 
     def unpack_data(self):
 
@@ -56,19 +62,21 @@ class LinearKPFM():
         volt_data = self.h5_main[indx0[2]]
         height_data = self.h5_main[indx0[3]]
         phase_data = self.h5_main[indx0[4]]
-        ndim_form = volt_data.get_n_dim_form().shape
-        volt = (np.flipud(np.reshape(volt_data, ndim_form[:2])))
-        pot = (np.flipud(np.reshape(pot_data, ndim_form[:2])))
-        height = (np.flipud(np.reshape(height_data, ndim_form[:2])))
-        phase = (np.flipud(np.reshape(phase_data, ndim_form[:2])))
+        self.ndim_form = volt_data.get_n_dim_form().shape
+        self.volt = (np.flipud(np.reshape(volt_data, self.ndim_form[:2])))
+        self.pot = (np.flipud(np.reshape(pot_data, self.ndim_form[:2])))
+        self.height = (np.flipud(np.reshape(height_data, self.ndim_form[:2])))
+        self.phase = (np.flipud(np.reshape(phase_data, self.ndim_form[:2])))
+        self.amp = (np.flipud(np.reshape(amp_data,self.ndim_form[:,2])))
 
-        data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
-                     'scan_rate': self.scan_rate, 'scan_size': self.scan_size}
 
-        vs, cntmax, cnttot, indx, t, y = self.split_voltages(data_dict)
+        # data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
+        #              'scan_rate': self.scan_rate, 'scan_size': self.scan_size}
 
-        data_dict.update({'indx': indx, 'vs': vs, 'count max': cntmax,'count total':cnttot,'t':t,'y':y})
-        return data_dict
+        # vs, cntmax, cnttot, indx, t, y = self.split_voltages(data_dict)
+        self.split_voltages()
+        # data_dict.update({'indx': indx, 'vs': vs, 'count max': cntmax,'count total':cnttot,'t':t,'y':y})
+        # return data_dict
 
     def compute_voltage_averages(self,data_dict):
         import numpy as np
