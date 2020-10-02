@@ -43,6 +43,8 @@ class LinearKPFM():
           scan_rate: in Hz
           scan_size: in um
         """
+        import numpy as np
+
         scan_rate = scan_rate
         desr = [ii.data_descriptor for ii in h5_main]
         subs = ['Amplitude', 'Potential', 'UserIn', 'HeightRetrace', 'Phase']
@@ -67,6 +69,8 @@ class LinearKPFM():
         return data_dict
 
     def compute_voltage_averages(self,data_dict):
+        import numpy as np
+
         avgs = []
         zeroavg = np.mean(data_dict['CPD'][:data_dict['indx'][0] - 1, :], axis=0)
         for ii in range(len(data_dict['indx']) - 1):
@@ -75,6 +79,9 @@ class LinearKPFM():
         data_dict.update({'zeroavg':zeroavg,'avgs':avgs})
 
     def plot_CPD_voltages(data_dict,method='Raw',window=13,poly=3):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
         cmap = plt.cm.get_cmap('plasma', data_dict['count max'])
         jj = 0
         fig, axs = plt.subplots(nrows=int(data_dict['count total'] / 2 + 1), ncols=2, sharex='col', figsize=(15, 10))
