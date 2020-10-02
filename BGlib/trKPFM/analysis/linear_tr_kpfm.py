@@ -5,6 +5,8 @@ test file
 
 class LinearKPFM():
     def __init__(self,h5_main):
+        self.h5_main = h5_main
+
 
     def split_voltages(self,data_dict):
         t = np.array([ii for ii in range(data_dict['ndim_form'][0])]) * (1 / data_dict['scan_rate']) * 2
@@ -56,7 +58,7 @@ class LinearKPFM():
         height = (np.flipud(np.reshape(height_data, ndim_form[:2])))
         phase = (np.flipud(np.reshape(phase_data, ndim_form[:2])))
 
-        data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'ndim_form': ndim_form,
+        data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
                      'scan_rate': scan_rate, 'scan_size': scan_size}
 
         vs, cntmax, cnttot, indx, t, y = split_voltages(data_dict)
