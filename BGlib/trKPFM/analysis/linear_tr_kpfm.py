@@ -87,7 +87,7 @@ class LinearKPFM():
 
         # data_dict.update({'zeroavg':zeroavg,'avgs':avgs})
         self.zeroavg = zeroavg
-        self.avgs = self.avgs
+        self.avgs = avgs
 
 
     def plot_CPD_voltages(self,method='Raw',window=13,poly=3):
