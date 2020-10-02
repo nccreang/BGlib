@@ -51,11 +51,11 @@ class LinearKPFM():
         desr = [ii.data_descriptor for ii in self.h5_main]
         subs = ['Amplitude', 'Potential', 'UserIn', 'HeightRetrace', 'Phase']
         indx0 = [desr.index(list(filter(lambda x: ii in x, desr))[0]) for ii in subs]
-        amp_data = h5_main[indx0[0]]
-        pot_data = h5_main[indx0[1]]
-        volt_data = h5_main[indx0[2]]
-        height_data = h5_main[indx0[3]]
-        phase_data = h5_main[indx0[4]]
+        amp_data = self.h5_main[indx0[0]]
+        pot_data = self.h5_main[indx0[1]]
+        volt_data = self.h5_main[indx0[2]]
+        height_data = self.h5_main[indx0[3]]
+        phase_data = self.h5_main[indx0[4]]
         ndim_form = volt_data.get_n_dim_form().shape
         volt = (np.flipud(np.reshape(volt_data, ndim_form[:2])))
         pot = (np.flipud(np.reshape(pot_data, ndim_form[:2])))
