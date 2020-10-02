@@ -136,7 +136,7 @@ class LinearKPFM():
                     zero_pot = self.zeroavg
             if method == 'Raw':
                 yy = self.pot[ii, :]
-                axs[row, col].plot(data_dict['y'], yy, c=cmap(jj))
+                axs[row, col].plot(self.y, yy, c=cmap(jj))
             elif method == 'Static_rm':
                 yy = self.pot[ii, :] - self.zeroavg
                 axs[row, col].plot(self.y, yy, c=cmap(jj))
@@ -148,7 +148,7 @@ class LinearKPFM():
             lab = 0
             jj = jj + 1
         scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma,
-                                      norm=plt.Normalize(vmin=0, vmax=data_dict['t'][data_dict['count max']]))
+                                      norm=plt.Normalize(vmin=0, vmax=self.t[self.cntmax]))
         scbar._A = []
         cbar = plt.colorbar(scbar, cax=cbaxs)
         cbar.ax.set_ylabel('Relaxation Time (s)', rotation=270, labelpad=15, size=12)
