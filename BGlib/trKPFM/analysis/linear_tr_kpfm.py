@@ -4,10 +4,17 @@ test file
 
 
 class LinearKPFM():
-    def __init__(self,h5_main,scan_rate,scan_size):
+    def __init__(self,h5_main,scan_rate,scan_size,dim):
+        """
+        h5_main: h5 file
+        scan_rate: frequency of scan (ex: 0.5 Hz)
+        scan_size: physical dimension of scan (ex: 80 um)
+        dim: distance between electrodes in cm (for Efield calculations)
+        """
         self.h5_main = h5_main
         self.scan_rate = scan_rate
         self.scan_size = scan_size
+        self.im = dim
 
 
     def split_voltages(self):
@@ -147,7 +154,13 @@ class LinearKPFM():
                         zero_pot = self.zeroavg
                     S = np.array2string(np.rint(self.volt[ii, 0])) + ' V'
                     axs[row, col].text(0.3, 0.8, S, transform=axs[row, col].transAxes)
-                    axs[row, col].set_ylabel('CPD (V)', rotation=90, labelpad=2)
+                    if method == 'Raw':
+                        axs[row, col].set_ylabel('CPD (V)', rotation=90, labelpad=2)
+                    if method == 'Static_rm':
+                        axs[row, col].set_ylabel('$\Delta$CPD (V)', rotation=90, labelpad=2)
+                    if method == 'Efield':
+                        axs[row, col].set_ylabel('E (V/m)', rotation=90, labelpad=2)
+                        axs[row, col].axhline(y = self.volt[ii,0]/self.dim,color=(0.5,0.5,0.5),linestyle='--')
                 if ii == self.indx[0]:
                     zero_pot = self.zeroavg
             if method == 'Raw':
@@ -159,7 +172,7 @@ class LinearKPFM():
             elif method == 'Efield':
                 smooth = si.savgol_filter(self.pot[ii,:]-zero_pot,window,poly)
                 yy = np.diff(smooth)/np.diff(self.y)*1e4
-                axs[row, col].plot(self.y[:,-1],yy,c=cmap(jj))
+                axs[row, col].plot(self.y[:-1],yy,c=cmap(jj))
 
             lab = 0
             jj = jj + 1
@@ -172,3 +185,153 @@ class LinearKPFM():
         fig.align_ylabels(axs)
         fig.subplots_adjust(wspace=.3)
         return fig, axs
+
+    def calc_relaxtion(self,dist):
+        """
+        dist: list of distances (real space) of wanted relaxtion calculation
+        """
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from scipy.optimize import curve_fit
+
+        t_const = []
+        t_const_z = []
+        a_vals = []
+        b_vals = []
+        a_vals_z = []
+        b_vals_z = []
+        lin0 = []
+        lin1 = []
+        p = -1
+        cmap = plt.cm.get_cmap('plasma', len(self.indx))
+
+        def exp_decay(x, a, b, k):
+            return a * np.exp(x * k) + b
+
+        fig, ax = plt.subplots(ncols=len(dist), nrows=2, figsize=(11, 8))
+        ax[1, 0].set_ylabel('CPD - Static (V) After Biasing')
+        for k in dist:
+            jj = (np.abs(self.y - k)).argmin()
+            p = p + 1
+            t_c = []
+            a_0 = []
+            b_0 = []
+            t_z = []
+            a_z = []
+            b_z = []
+            ax[0, p].set_xlabel('Time (s)')
+            ax[1, p].set_xlabel('Time (s)')
+            ax[0, p].yaxis.set_ticks_position('both')
+            ax[1, p].yaxis.set_ticks_position('both')
+            ax[0, p].title.set_text(str(k) + '$\mu$m \n from edge')
+            ax[0, p].axhline(y=0, linestyle=':', linewidth=0.5, color='k')
+            ax[1, p].axhline(y=0, linestyle=':', linewidth=0.5, color='k')
+
+            if p != 0:
+                if k != dist[-1]:
+                    ax[0, p].set_yticklabels('')
+                    ax[1, p].set_yticklabels('')
+                else:
+                    ax[0, p].yaxis.tick_right()
+                    ax[1, p].yaxis.tick_right()
+
+            for ii in range(len(self.indx)):
+                if np.rint(self.volt[self.indx[ii], 0]) == 0:
+                    if self.indx[ii] == self.indx[-1]:
+                        y_array = self.pot[self.indx[ii]:-1, jj] - self.zeroavg[jj]
+                    else:
+                        y_array = self.pot[self.indx[ii]:self.indx[ii + 1] - 1, jj] - self.zeroavg[jj]
+                    x_array = self.t[:len(y_array)]
+                    lin1 += ax[1, p].plot(x_array, y_array, c=cmap(ii),
+                                          label=str(int(np.rint(self.volt[self.indx[ii - 1], 0]))) + ' V$_{app}$')
+                    if self.volt[self.indx[ii - 1], 0] > 0:
+                        yint = np.min(y_array)
+                    else:
+                        yint = np.max(y_array)
+                    popt, pcov = curve_fit(exp_decay, x_array, y_array, p0=[0.5, yint, -0.5])
+                    ax[1, p].plot(x_array, exp_decay(x_array, *popt), color='k', linestyle='--')
+                    t_z.append(popt[2])
+                    b_z.append(popt[1])
+                    a_z.append(popt[0])
+                else:
+                    x_array = self.t[:len(y_array)]
+                    lin0 += ax[0, p].plot(x_array, y_array, c=cmap(ii),
+                                          label=str(int(np.rint(self.volt[self.indx[ii], 0]))) + ' V')
+                    if self.volt[self.indx[ii], 0] > 0:
+                        yint = np.max(y_array)
+                    else:
+                        yint = np.min(y_array)
+                    popt, pcov = curve_fit(exp_decay, x_array, y_array, p0=[0.5, yint, -0.5])
+                    ax[0, p].plot(x_array, exp_decay(x_array, *popt), color='k', linestyle='--')
+                    t_c.append(popt[2])
+                    b_0.append(popt[1])
+                    a_0.append(popt[0])
+            if len(t_const) == 0:
+                t_const = np.asarray(t_c)
+                a_vals = np.asarray(a_0)
+                b_vals = np.asarray(b_0)
+            else:
+                t_const = np.vstack((t_const, np.asarray(t_c)))
+                a_vals = np.vstack((a_vals, np.asarray(a_0)))
+                b_vals = np.vstack((b_vals, np.asarray(b_0)))
+            if len(t_const_z) == 0:
+                t_const_z = np.asarray(t_z)
+                a_vals_z = np.asarray(a_z)
+                b_vals_z = np.asarray(b_z)
+            else:
+                t_const_z = np.vstack((t_const_z, np.asarray(t_z)))
+                a_vals_z = np.vstack((a_vals_z, np.asarray(a_z)))
+                b_vals_z = np.vstack((b_vals_z, np.asarray(b_z)))
+        fig.subplots_adjust(wspace=-.1)
+        fig.subplots_adjust(hspace=0.3)
+
+        plt.setp(ax[0, :], ylim=(-1.2, 1.2))
+        plt.setp(ax[1, :], ylim=(-0.35, 0.35))
+        ax[0, 0].legend(ncol=2, handlelength=1.0, handletextpad=0.4, loc='upper left', columnspacing=1,
+                              prop={'size': 8})
+        ax[1, 0].legend(ncol=2, handlelength=1.0, handletextpad=0.4, loc='upper left', columnspacing=1,
+                              prop={'size': 8})
+        return fig,ax
+
+    def view_line_scans(self,dist):
+        """
+        dist: distances in real space to plot
+        """
+        import numpy as np
+        import matplotlib.pyplot as plt
+        avgs = []
+        zeroavg = np.mean(self.pot[:self.indx[0] - 1, :], axis=0)
+        for ii in range(len(self.indx) - 1):
+            avgs.append(np.mean(self.pot[self.indx[ii]:self.indx[ii + 1] + 1, :], axis=0) - self.zeroavg)
+
+        cmap = plt.cm.get_cmap('plasma', len(self.indx))
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+        ax[0].plot(self.y, self.zeroavg, 'r--', label='Static CPD')
+        ax[0].set_xlabel('Distance ($\mu$m)')
+        for ii in range(len(self.avgs)):
+            ax[0].plot(self.y, self.avgs[ii], c=cmap(ii))
+        ax[0].legend()
+        ax[0].axhline(y=0, color=(0.5, 0.5, 0.5), linestyle='--')
+
+        cmap1 = plt.cm.get_cmap('viridis', self.ndim_form[0])
+
+        for ii in dist:
+            ii = (np.abs(self.y - ii)).argmin()
+            v = np.zeros(len(self.zeroavg))
+            ax[1].plot(self.t[:], self.pot[:, ii] - self.zeroavg[ii], c=cmap1(ii), label=str(int(self.y[ii])) + ' $\mu$m',
+                       linewidth=1.5)
+        ax[1].set_xlabel('Time (s)')
+        ax[1].legend(ncol=1, title='Distance from edge', bbox_to_anchor=(1, 1), loc="upper left")
+        ax[1].axhline(y=0, color=(0.5, 0.5, 0.5), linestyle='--')
+        for k in self.indx:
+            j = self.indx.index(k)
+            if np.rint(self.vs[j]) == 0:
+                continue
+            txty = self.pot[k,-1]-self.zeroavg[-1]
+            if txty > 0:
+                ax[1].text(self.t[k] + 10, txty, str(int(np.rint(self.vs[j]))) + ' V', horizontalalignment='left',
+                           verticalalignment='bottom')
+            else:
+                ax[1].text(self.t[k] + 10, txty, str(int(np.rint(self.vs[j]))) + ' V', horizontalalignment='left',
+                           verticalalignment='top')
+        fig.subplots_adjust(wspace=.3)
