@@ -8,6 +8,7 @@ Created on Fri Sept 18 2020
 
 
 from .igor_ibw import IgorIBWTranslator
+from .trkpfm import TRKPFMTranslator
 
 
-__all__ = ['IgorIBWTranslator']
+__all__ = ['IgorIBWTranslator','TRKPFMTranslator']
