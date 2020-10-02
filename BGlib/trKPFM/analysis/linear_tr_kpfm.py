@@ -21,14 +21,13 @@ class LinearKPFM():
         indx = []
         vs = []
         for ii in range(1, len(t)):
-            if np.rint(data_dict['Voltage'][ii, 0]) != np.rint(data_dict['Voltage'][ii - 1, 0]):
+            if np.rint(self.volt[ii, 0]) != np.rint(self.volt[ii - 1, 0]):
                 cnttot = cnttot + 1  # counts the total number of voltage switches in the data set
-                if np.rint(data_dict['Voltage'][ii, 0]) != np.rint(data_dict['Voltage'][
-                                                                       ii, -1]):  # checks to see if the voltage is changed in the middle fo the scan line
+                if np.rint(self.volt[ii, 0]) != np.rint(self.volt[ii, -1]):  # checks to see if the voltage is changed in the middle fo the scan line
                     indx.append(ii + 1)
                 else:
                     indx.append(ii)
-                    vs.append(data_dict['Voltage'][ii, 0])
+                    vs.append(self.volt[ii, 0])
                 if count > cntmax:
                     cntmax = count
                     count = 1
@@ -82,66 +81,69 @@ class LinearKPFM():
         import numpy as np
 
         avgs = []
-        zeroavg = np.mean(data_dict['CPD'][:data_dict['indx'][0] - 1, :], axis=0)
-        for ii in range(len(data_dict['indx']) - 1):
-            avgs.append(np.mean(data_dict['CPD'][data_dict['indx'][ii]:data_dict['indx'][ii + 1] + 1, :], axis=0) - zeroavg)
+        zeroavg = np.mean(self.pot[:self.indx[0] - 1, :], axis=0)
+        for ii in range(len(self.indx) - 1):
+            avgs.append(np.mean(self.pot[self.indx[ii]:self.indx[ii + 1] + 1, :], axis=0) - zeroavg)
 
-        data_dict.update({'zeroavg':zeroavg,'avgs':avgs})
+        # data_dict.update({'zeroavg':zeroavg,'avgs':avgs})
+        self.zeroavg = zeroavg
+        self.avgs = self.avgs
 
-    def plot_CPD_voltages(data_dict,method='Raw',window=13,poly=3):
+
+    def plot_CPD_voltages(method='Raw',window=13,poly=3):
         import matplotlib.pyplot as plt
         import numpy as np
 
-        cmap = plt.cm.get_cmap('plasma', data_dict['count max'])
+        cmap = plt.cm.get_cmap('plasma', self.cntmax)
         jj = 0
-        fig, axs = plt.subplots(nrows=int(data_dict['count total'] / 2 + 1), ncols=2, sharex='col', figsize=(15, 10))
+        fig, axs = plt.subplots(nrows=int(self.cnttot / 2 + 1), ncols=2, sharex='col', figsize=(15, 10))
         axs[0, 0].axis('off')
         axs[1, 0].set_title('Biasing')
         axs[0, 1].set_title('Zero Voltage After Bias')
         axs[0, 1].text(0.3, 0.8, '0 V', transform=axs[0, 1].transAxes)
-        axs[int(data_dict['count total'] / 2), 0].set_xlabel('$\mu$m')
-        axs[int(data_dict['count total'] / 2), 1].set_xlabel('$\mu$m')
+        axs[int(self.cnttot / 2), 0].set_xlabel('$\mu$m')
+        axs[int(self.cnttot / 2), 1].set_xlabel('$\mu$m')
         cbaxs = fig.add_axes([0.91, 0.095, 0.02, 0.71])
         fig.subplots_adjust(hspace=0.25, wspace=0.25)
         axs[0, 1].set_ylabel('CPD (V)', rotation=90, labelpad=2)
-        axs[0, 1].axvspan(data_dict['y'][0], 0, facecolor='0.5', alpha=0.5)
+        axs[0, 1].axvspan(self.y[0], 0, facecolor='0.5', alpha=0.5)
 
         col = 1
         row = 0
         lab = 0
-        for ii in range(len(data_dict['t'])):
-            if np.rint(data_dict['Voltage'][ii, -1]) != np.rint(data_dict['Voltage'][ii, 0]):
+        for ii in range(len(self.t)):
+            if np.rint(self.volt[ii, -1]) != np.rint(self.volt[ii, 0]):
                 jj = jj + 1
                 lab = 1
                 continue
             if ii != 0:
                 if lab == 1:
-                    prev = np.rint(data_dict['Voltage'][ii - 2, 0])
+                    prev = np.rint(self.volt[ii - 2, 0])
                 else:
-                    prev = np.rint(data_dict['Voltage'][ii - 1, 0])
-                if np.rint(data_dict['Voltage'][ii, 0]) != prev:
+                    prev = np.rint(self.volt[ii - 1, 0])
+                if np.rint(self.volt[ii, 0]) != prev:
                     jj = 0
-                    if np.rint(data_dict['Voltage'][ii, 0]) != 0:
+                    if np.rint(self.volt[ii, 0]) != 0:
                         col = 0
                         row = row + 1
                     else:
                         col = 1
-                        zero_pot = data_dict['zeroavg']
-                    S = np.array2string(np.rint(data_dict['Voltage'][ii, 0])) + ' V'
+                        zero_pot = self.zeroavg
+                    S = np.array2string(np.rint(self.volt[ii, 0])) + ' V'
                     axs[row, col].text(0.3, 0.8, S, transform=axs[row, col].transAxes)
                     axs[row, col].set_ylabel('CPD (V)', rotation=90, labelpad=2)
                 if ii == 0:
-                    zero_pot = data_dict['zeropot']
+                    zero_pot = self.zeroavg
             if method == 'Raw':
-                yy = data_dict['CPD'][ii, :]
+                yy = self.pot[ii, :]
                 axs[row, col].plot(data_dict['y'], yy, c=cmap(jj))
             elif method == 'Static_rm':
-                yy = data_dict['CPD'][ii, :] - data_dict['zeroavg']
-                axs[row, col].plot(data_dict['y'], yy, c=cmap(jj))
+                yy = self.pot[ii, :] - self.zeroavg
+                axs[row, col].plot(self.y, yy, c=cmap(jj))
             elif method == 'Efield':
-                smooth = si.savgol_filter(data_dict['CPD'][ii,:]-zero_pot,window,poly)
+                smooth = si.savgol_filter(self.pot[ii,:]-zero_pot,window,poly)
                 yy = np.diff(smooth)/np.diff(data_dict['y'])*1e4
-                axs[row, col].plot(data_dict['y'][:,-1],yy,c=cmap(jj))
+                axs[row, col].plot(self.y[:,-1],yy,c=cmap(jj))
 
             lab = 0
             jj = jj + 1
