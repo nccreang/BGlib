@@ -1,5 +1,5 @@
 """
 for analysis
 """
-import .linear_tr_kpfm
+import ...
 __all__ = ['linear_tr_kpfm.py']
