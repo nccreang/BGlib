@@ -4,8 +4,10 @@ test file
 
 
 class LinearKPFM():
-    def __init__(self,h5_main):
+    def __init__(self,h5_main,scan_rate,scan_size):
         self.h5_main = h5_main
+        self.scan_rate = scan_rate
+        self.scan_size = scan_size
 
 
     def split_voltages(self,data_dict):
@@ -36,7 +38,7 @@ class LinearKPFM():
                 count = count + 1
         return vs, cntmax, cnttot, indx, t, y
 
-    def unpack_data(self,h5_main,scan_rate,scan_size):
+    def unpack_data(self):
 
         """
           Not sure how to get the scan rate and scan size out of the igor file...
@@ -47,7 +49,7 @@ class LinearKPFM():
         import numpy as np
 
         scan_rate = scan_rate
-        desr = [ii.data_descriptor for ii in h5_main]
+        desr = [ii.data_descriptor for ii in self.h5_main]
         subs = ['Amplitude', 'Potential', 'UserIn', 'HeightRetrace', 'Phase']
         indx0 = [desr.index(list(filter(lambda x: ii in x, desr))[0]) for ii in subs]
         amp_data = h5_main[indx0[0]]
@@ -62,7 +64,7 @@ class LinearKPFM():
         phase = (np.flipud(np.reshape(phase_data, ndim_form[:2])))
 
         data_dict = {'Voltage': volt, 'CPD': pot, 'Height': height, 'Phase': phase, 'Amplitude': amp_data, 'ndim_form': ndim_form,
-                     'scan_rate': scan_rate, 'scan_size': scan_size}
+                     'scan_rate': seflf.scan_rate, 'scan_size': self.scan_size}
 
         vs, cntmax, cnttot, indx, t, y = self.split_voltages(data_dict)
 
