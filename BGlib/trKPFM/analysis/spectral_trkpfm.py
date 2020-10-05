@@ -2,7 +2,7 @@
 Analysis code for spectral tr-KPFM
 """
 
-class SpectralTRKPFM():
+class trKPFM_S_Dataset():
     def __init__(self,h5_file):
         self.h5_file = h5_file
 
