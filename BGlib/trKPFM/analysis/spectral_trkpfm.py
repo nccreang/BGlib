@@ -26,7 +26,6 @@ class trKPFM_S_Dataset():
 
     def unpack_attributes(self):
         import numpy as np
-        from scipy.io import loadmat
         import pyUSID as usid
 
         self.dc_amp_vec = np.squeeze(usid.hdf_utils.find_dataset(self.h5_file,'Spectroscopic_Values')[0][:])
@@ -35,7 +34,7 @@ class trKPFM_S_Dataset():
         self.num_cols = int(self.h5_main['num_cols'])
         self.num_pix = self.num_cols*self.num_rows
 
-        bias = h5_f['dc_amp_vec']
+        bias = self.h5_main['dc_amp_vec']
         self.bias_vec = bias[0][1::2]
         bias_positive = bias[0][1::2]
         bias_negative = np.flip(bias[0][3::4].T,0)
@@ -43,16 +42,16 @@ class trKPFM_S_Dataset():
         self.num_dc_step = np.size(self.bias_vec)
         pts_per_bias = self.pnts_per_pix/self.num_dc_step
 
-        self.io_rate = float(h5_f['IO_rate'])
-        self.io_time = float(h5_f['IO_time'])
+        self.io_rate = float(self.h5_main['IO_rate'])
+        self.io_time = float(self.h5_main['IO_time'])
 
         t_per_pix = self.dc_amp_vec.shape[1]/self.io_rate
 
-        self.t_vec_bias = np.linspace(0,self.io_time,nm=t_per_bias*self.io_rate,dtype='float')
-        self.t_vec_pix = np.linspace(0,2*self.num_dc_step*t_per_bias,num=self.pnts_per_pix,dtype='float')
+        self.t_vec_bias = np.linspace(0,self.io_time,nm=self.io_time*self.io_rate,dtype='float')
+        self.t_vec_pix = np.linspace(0,2*self.num_dc_step*self.io_time,num=self.pnts_per_pix,dtype='float')
 
         print("Length of time per bias value:")
-        print(t_per_bias)
+        print(self.io_time)
         print("Length of time per pixel:")
         print(t_per_pix)
         print("Number of bias values:")
@@ -95,6 +94,7 @@ class trKPFM_S_Dataset():
         self.CPD = (self.real1/amp2)*(vac/4)*Xgain
 
         self.h5_CPD_grp = usid.hdf_utils.create_indexed_group(self.h5_main.parent.parent,'CPD')
+
     def add_ancillary_dsets(self):
         import numpy as np
         import pyUSID as usid
@@ -117,6 +117,7 @@ class trKPFM_S_Dataset():
 
     def compute_SVD(self,num_components=100):
         import pycroscopy as px
+        import numpy as np
 
         decomposer = px.processing.svd_utils.SVD(self.h5_CPD,num_components=num_components)
         h5_svd_grp = decomposer.compute(override=True)
@@ -135,6 +136,7 @@ class trKPFM_S_Dataset():
 
     def parse_data(self):
         import pyUSID as usid
+        import numpy as np
 
         dset_list = usid.hdf_utils.get_auxiliary_datasets(self.h5_CPD,['Position_Indices','Position_Values',
                                                                        'Spectroscopic_Indices','Spectroscopic_Values'])
@@ -194,7 +196,7 @@ class trKPFM_S_Dataset():
         h5_CPD_off[:], success = usid.hdf_utils.reshape_from_n_dims(OffCPD_stack, h5_pos=h5on_pos_inds,
                                                                     h5_spec=h5on_spec_inds)
 
-        usid.hdf_utils.print_tree(h5_file)
+        usid.hdf_utils.print_tree(self.h5_file)
 
 
     def fit_relaxation_single(self,h5,bias_pnt=0,window=55,polyval=0):
@@ -276,6 +278,7 @@ class trKPFM_S_Dataset():
     def plot_relaxation_fit(self):
         import numpy as np
         import pyUSID as usid
+        import matplotlib.pyplot as plt
 
         fit_mat1 = np.nan_to_num(self.relaxation_fit['fit vals'])
         fit_mat1.shape
@@ -330,9 +333,128 @@ class trKPFM_S_Dataset():
 
         t_vec_pix_parsed = np.linspace(0, self.num_dc_step * self.io_time, num=self.pnts_per_pix / 2, dtype='float')
 
-        fig_lab, fig_centroids = plot_cluster_results_separately(h5_kmeans_labels[:, :].reshape(self.num_rows, self.num_cols),
+        fig_lab, fig_centroids = self.plot_cluster_results_separately(h5_kmeans_labels[:, :].reshape(self.num_rows, self.num_cols),
                                                                  h5_kmeans_mean_resp[:, :], t_vec_pix_parsed * 1000,
                                                                  legend_mode=2)
+
+
+
+    def plot_cluster_results_separately(self,labels_mat, cluster_centroids, bias_vec, legend_mode=1, **kwargs):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+
+        num_clusters = cluster_centroids.shape[0]
+        fig_lab, axis_lab = plt.subplots(figsize=(5.5,5))
+        _, _ = usid.plot_utils.plot_map(axis_lab, labels_mat,
+                                                  clim=[0, num_clusters-1],
+                                                  cmap=plt.get_cmap('viridis', num_clusters),
+                                                  aspect='auto', show_xy_ticks=True, **kwargs)
+        axis_lab.set_xlabel('X ($\mu$m)', fontsize=16)
+        axis_lab.set_ylabel('Y ($\mu$m)', fontsize=16)
+        axis_lab.set_title('K-Means Cluster Labels', fontsize=16)
+        fig_lab.tight_layout()
+
+        # Plot centroids
+        fig_width = 5.0
+        if legend_mode not in [0, 1]:
+            fig_width = 5.85
+        fig_centroids, axis_centroids = plt.subplots(figsize=(fig_width, 5))
+        colors = [ plt.cm.viridis(x) for x in np.linspace(0, 1, cluster_centroids.shape[0]) ]
+
+        # print('Number of pixels in each cluster:')
+        for line_ind in range(cluster_centroids.shape[0]):
+            # cmap=plt.cm.jet
+            line_color=colors[line_ind]
+            line_label = 'Cluster ' + str(line_ind)
+           # num_of_cluster_members = len(np.where(labels==line_ind)[0])
+            # print ("Cluster " + str(line_ind) + ': ' + str(num_of_cluster_members))
+            #if num_of_cluster_members > 10:
+            axis_centroids.plot(bias_vec, cluster_centroids[line_ind,:],
+                                label=line_label, color=line_color) # marker='o',
+        axis_centroids.set_xlabel('Time (ms)', fontsize=16)
+        axis_centroids.set_ylabel('CPD (V)', fontsize=16)
+        axis_centroids.set_title('K-Means Cluster Centroids', fontsize=16)
+        if legend_mode==0:
+            axis_centroids.legend(loc='lower right', fontsize=14)
+        elif legend_mode==1:
+            axis_centroids.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
+        else:
+            sm = usid.plot_utils.make_scalar_mappable(0, num_clusters-1,
+                                                   cmap=usid.plot_utils.discrete_cmap(num_clusters))
+            plt.colorbar(sm)
+        usid.plot_utils.set_tick_font_size(axis_centroids, 14)
+        fig_centroids.tight_layout()
+
+        return fig_lab, fig_centroids
+
+
+    def plot_cluster_results_2D(self,labels_mat, cluster_centroids,vmin,vmax, legend_mode=1, **kwargs):
+            import matplotlib.pyplot as plt
+            import pyUSID as usid
+            import numpy as np
+
+            num_clusters = cluster_centroids.shape[0]
+            fig_lab, axis_lab = plt.subplots(figsize=(5.5,5))
+            _, _ = usid.plot_utils.plot_map(axis_lab, labels_mat,
+                                                      clim=[0, num_clusters],
+                                                      cmap=plt.get_cmap('viridis', num_clusters),
+                                                      aspect='auto', show_xy_ticks=True, **kwargs)
+            axis_lab.set_xlabel('X ($\mu$m)', fontsize=16)
+            axis_lab.set_ylabel('Y ($\mu$m)', fontsize=16)
+            axis_lab.set_title('K-Means Cluster Labels', fontsize=16)
+            fig_lab.tight_layout()
+
+            # Plot centroids
+            fig_width = 5.0
+            if legend_mode not in [0, 1]:
+                fig_width = 5.85
+
+            fig_centroids, axis_centroids = plt.subplots(figsize=(fig_width, 5))
+            ndim_test, success, labels = usid.hdf_utils.reshape_to_n_dims(cluster_centroids, get_labels=True)
+            fig, axs = plt.subplots(2, 2,figsize=(5.5,5))
+
+
+            cm = ['jet']
+            index=0
+            for col in range(2):
+
+                for row in range(2):
+                    ax = axs[col, row]
+                    pcm = ax.pcolor(self.time_vec,self.bias_vec,np.rot90(ndim_test[index,:,:]),cmap='jet',vmin=vmin, vmax=vmax)
+
+                    #fig.colorbar(pcm, ax=ax)
+                    ax.set_title('Cluster: '+str(index+1), fontsize=12)
+                    if row==0:
+                        ax.set_ylabel('Bias (V)', fontsize=16)
+                    if row==0 & col==1:
+                        ax.set_ylabel('Bias (V)', fontsize=16)
+                    if col==1:
+                        ax.set_xlabel('Time (S)', fontsize=16)
+                        #ax.set_title('Cluster: '+str(index+1), fontsize=12)
+                    print(row,col)
+
+                    index=index+1
+
+
+            usid.plot_utils.use_nice_plot_params()
+
+            fig.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.8,
+                        wspace=0.4, hspace=0.1)
+            cb_ax = fig.add_axes([1.0, 0.1, 0.05, 0.8])
+            cbar = fig.colorbar(pcm, cax=cb_ax)
+            plt.tight_layout()
+            plt.show()
+
+            def fitexp(x, A, tau, y0, x0):
+                return A * np.exp(-(x - x0) / tau) + y0
+
+            def fitbiexp(x, A1, tau1, A2, tau2, y0, x0):
+                return A1 * np.exp(-(x - x0) / tau1) + A2 * np.exp(-(x - x0) / tau2) + y0
+
+            return fig_lab, fig_centroids
+
+
 
 
 
